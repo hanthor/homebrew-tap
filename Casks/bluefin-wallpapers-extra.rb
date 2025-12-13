@@ -11,8 +11,9 @@ cask "bluefin-wallpapers-extra" do
     strategy :github_releases
   end
 
-  destination_dir = "#{Dir.home}/.local/share/backgrounds/bluefin"
-  kde_destination_dir = "#{Dir.home}/.local/share/wallpapers/bluefin"
+  on_macos do
+    # macOS - install HEIC dynamic wallpapers
+    destination_dir = "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra"
 
   if File.exist?("/usr/bin/plasmashell")
     url "https://github.com/ublue-os/artwork/releases/download/bluefin-extra-v#{version}/bluefin-wallpapers-extra-kde.tar.zstd"
@@ -29,6 +30,18 @@ cask "bluefin-wallpapers-extra" do
       folder = File.basename(file, File.extname(file)).gsub(/-night|-day/, "")
       artifact file, target: "#{destination_dir}/#{folder}/#{File.basename(file)}"
     end
+  end
+
+  on_linux do
+    # Detect if GNOME is actually running
+    is_gnome = ENV["XDG_CURRENT_DESKTOP"]&.include?("GNOME") ||
+               ENV["DESKTOP_SESSION"]&.include?("gnome") ||
+               (File.exist?("/usr/bin/gnome-shell") && `pgrep -x gnome-shell`.strip != "")
+
+    # Detect if KDE is running
+    is_kde = ENV["XDG_CURRENT_DESKTOP"]&.include?("KDE") ||
+             ENV["DESKTOP_SESSION"]&.include?("kde") ||
+             File.exist?("/usr/bin/plasmashell")
 
     Dir.glob("#{staged_path}/gnome-background-properties/*").each do |file|
       artifact file, target: "#{Dir.home}/.local/share/gnome-background-properties/#{File.basename(file)}"
@@ -43,10 +56,65 @@ cask "bluefin-wallpapers-extra" do
   end
 
   preflight do
-    Dir.glob("#{staged_path}/**/*.xml").each do |file|
-      contents = File.read(file)
-      contents.gsub!("~", Dir.home)
-      File.write(file, contents)
+    if OS.mac?
+      # Create macOS destination directory
+      destination_dir = "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra"
+      FileUtils.mkdir_p destination_dir
+    end
+
+    if OS.linux?
+      # Detect if GNOME is actually running
+      is_gnome = ENV["XDG_CURRENT_DESKTOP"]&.include?("GNOME") ||
+                 ENV["DESKTOP_SESSION"]&.include?("gnome") ||
+                 (File.exist?("/usr/bin/gnome-shell") && `pgrep -x gnome-shell 2>/dev/null`.strip != "")
+
+      # Detect if KDE is running
+      ENV["XDG_CURRENT_DESKTOP"]&.include?("KDE") ||
+        ENV["DESKTOP_SESSION"]&.include?("kde") ||
+        File.exist?("/usr/bin/plasmashell")
+
+      destination_dir = "#{Dir.home}/.local/share/backgrounds/bluefin-extra"
+      kde_destination_dir = "#{Dir.home}/.local/share/wallpapers/bluefin-extra"
+
+      # Create destination directories
+      FileUtils.mkdir_p kde_destination_dir unless is_gnome
+      FileUtils.mkdir_p destination_dir if is_gnome
+      FileUtils.mkdir_p "#{Dir.home}/.local/share/gnome-background-properties" if is_gnome
+
+      # Update XML file paths for GNOME
+      Dir.glob("#{staged_path}/**/*.xml").each do |file|
+        next unless File.file?(file)
+
+        contents = File.read(file)
+        contents.gsub!("~", Dir.home)
+        File.write(file, contents)
+      end
+    end
+  end
+
+  postflight do
+    if OS.mac?
+      destination_dir = "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra"
+      puts "Wallpapers installed to: #{destination_dir}"
+      puts "To use: System Settings > Wallpaper > Add Folder > #{destination_dir}"
+    end
+
+    if OS.linux?
+      is_gnome = ENV["XDG_CURRENT_DESKTOP"]&.include?("GNOME") ||
+                 ENV["DESKTOP_SESSION"]&.include?("gnome") ||
+                 (File.exist?("/usr/bin/gnome-shell") && `pgrep -x gnome-shell 2>/dev/null`.strip != "")
+
+      is_kde = ENV["XDG_CURRENT_DESKTOP"]&.include?("KDE") ||
+               ENV["DESKTOP_SESSION"]&.include?("kde") ||
+               File.exist?("/usr/bin/plasmashell")
+
+      if is_gnome
+        puts "GNOME wallpapers installed to: #{Dir.home}/.local/share/backgrounds/bluefin-extra"
+      elsif is_kde
+        puts "KDE wallpapers installed to: #{Dir.home}/.local/share/wallpapers/bluefin-extra"
+      else
+        puts "Wallpapers installed to: #{Dir.home}/.local/share/wallpapers/bluefin-extra"
+      end
     end
   end
 end

@@ -1,5 +1,5 @@
 cask "framework-wallpapers" do
-  version "2025-12-10"
+  version "2025-12-14"
 
   name "framework-wallpapers"
   desc "Wallpapers for Framework laptops"
@@ -17,14 +17,14 @@ cask "framework-wallpapers" do
 
   if File.exist?("/usr/bin/plasmashell")
     url "https://github.com/ublue-os/artwork/releases/download/framework-v#{version}/framework-wallpapers-kde.tar.zstd"
-    sha256 "904d5116a7f397733d4e8602e7184bb063f3ab12df241a819187a1c5e8e4eb99"
+    sha256 "2616c84b94bb3e83bf0576bbb260f2a5f98c06674b69e14db335e79d7e3b03a1"
 
     Dir.glob("#{staged_path}/*").each do |file|
       artifact file, target: "#{kde_destination_dir}/#{File.basename(file)}"
     end
   elsif File.exist?("/usr/bin/gnome-shell") || File.exist?("/usr/bin/mutter")
     url "https://github.com/ublue-os/artwork/releases/download/framework-v#{version}/framework-wallpapers-gnome.tar.zstd"
-    sha256 "cec25556745ec15cbc73eeb356e94479d7daf9cfbcb1a56da408e1e3c917441b"
+    sha256 "8affb9c512d39fc0c665608939815e1eab7062bf1a01c3deab23de367216efc9"
 
     Dir.glob("#{staged_path}/images/*").each do |file|
       artifact file, target: "#{destination_dir}/#{File.basename(file)}"
@@ -60,7 +60,7 @@ cask "framework-wallpapers" do
     end
   else
     url "https://github.com/ublue-os/artwork/releases/download/framework-v#{version}/framework-wallpapers-png.tar.zstd"
-    sha256 "ab55af2ddf076955c6982065e827f4c1fb9864555cb151c7bb10e8187492caf3"
+    sha256 "2da39f34cb2131861da2adca1d03a6b25b0714b2e7d2686b4d14f7ed8c60e8eb"
 
     Dir.glob("#{staged_path}/*").each do |file|
       artifact file, target: "#{destination_dir}/#{File.basename(file)}"

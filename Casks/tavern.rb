@@ -1,7 +1,7 @@
 cask "tavern" do
   on_macos do
-    version "0.1.1"
-    sha256 "55bedc8d075e85b3ac60d8a229495d71e74c34b77c39ebef4580ef98667ce6d7"
+    version "0.1.3"
+    sha256 "702834f002fe46b067689bc9f3f1f0abff6d9e30b9cecaa7832fad6c32c93b5d"
 
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-macOS.zip"
     app "Tavern.app"
@@ -14,19 +14,25 @@ cask "tavern" do
   end
 
   on_linux do
-    version "0.1.1"
-    sha256 "0b2e6f3d1d409ea66742293c0708d7bcdaa99543b674be8544e4a821af2d4f0c"
+    version "0.1.3"
+    sha256 "4712464d96f67bd75f34f022f5f1761bcd3e6cdabd17dc8c870bd41b4ca6f349"
 
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-Linux.flatpak"
-
-    depends_on formula: "flatpak"
+    container type: :naked
 
     postflight do
-      system "flatpak", "install", "--user", "--noninteractive", staged_path/"Tavern-Linux.flatpak"
+      system_command "flatpak",
+        args: ["install", "--user", "--noninteractive", staged_path/"Tavern-Linux.flatpak"],
+        sudo: false
     end
 
     uninstall_postflight do
-      system "flatpak", "remove", "--user", "--noninteractive", "dev.hanthor.Tavern", err: :ignore
+      system_command "flatpak",
+        args: ["remove", "--user", "--noninteractive", "dev.hanthor.Tavern"],
+        print_stderr: false,
+        sudo: false
+    rescue StandardError
+      nil
     end
 
     zap trash: "~/.var/app/dev.hanthor.Tavern"

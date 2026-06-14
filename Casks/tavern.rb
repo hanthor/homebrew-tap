@@ -1,5 +1,5 @@
 cask "tavern" do
-  version "0.1.6"
+  version "0.1.7"
 
   name "Tavern"
   desc "Modern Homebrew client built with Python and GTK 4"
@@ -11,7 +11,7 @@ cask "tavern" do
   end
 
   on_macos do
-    sha256 "52e377ec0e822badeecd65b4a9f9b17f62caa5e820aac1d4860b2ff865c071dc"
+    sha256 "ef12dc475a2b4c5eb5115b2a79316fbc1c8dcc7b264d18d0d1d96fc6fd7204c7"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-macOS.zip"
 
     app "Tavern.app"
@@ -24,7 +24,7 @@ cask "tavern" do
   end
 
   on_linux do
-    sha256 "514d4ffe2a2f757369b41863a4f63fbbb222c429652803ebc081cb16ba21ac25"
+    sha256 "2d83cd78fde85d4faabaf3da300a28b742dba4ae3b3d5e3d6f05ff9149e8af12"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-Linux.AppImage"
 
     binary "squashfs-root/AppRun", target: "tavern"
@@ -32,7 +32,7 @@ cask "tavern" do
     artifact "squashfs-root/usr/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg"
 
-    artifact "squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop",
+    artifact "squashfs-root/dev.hanthor.Tavern.desktop",
              target: "#{Dir.home}/.local/share/applications/dev.hanthor.Tavern.desktop"
 
     preflight do
@@ -44,10 +44,10 @@ cask "tavern" do
       FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
       FileUtils.mkdir_p "#{Dir.home}/.local/share/icons/hicolor/scalable/apps"
 
-      desktop = File.read("#{staged_path}/squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop")
+      desktop = File.read("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop")
       desktop.gsub!(%r{^Exec=.*}, "Exec=#{HOMEBREW_PREFIX}/bin/tavern")
       desktop.gsub!(%r{^Icon=.*}, "Icon=dev.hanthor.Tavern")
-      File.write("#{staged_path}/squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop", desktop)
+      File.write("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop", desktop)
     end
 
     postflight do

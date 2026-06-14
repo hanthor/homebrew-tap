@@ -34,7 +34,7 @@ cask "tavern" do
     artifact "squashfs-root/usr/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg"
 
-    artifact "squashfs-root/dev.hanthor.Tavern.desktop",
+    artifact "squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop",
              target: "#{Dir.home}/.local/share/applications/dev.hanthor.Tavern.desktop"
 
     preflight do
@@ -63,7 +63,7 @@ cask "tavern" do
       FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
       FileUtils.mkdir_p "#{Dir.home}/.local/share/icons/hicolor/scalable/apps"
 
-      desktop = File.read("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop")
+      desktop = File.read("#{staged_path}/squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop")
       desktop.gsub!(%r{^Exec=.*}, "Exec=#{HOMEBREW_PREFIX}/bin/tavern")
       desktop.gsub!(%r{^Icon=.*}, "Icon=dev.hanthor.Tavern")
       File.write("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop", desktop)

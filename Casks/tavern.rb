@@ -1,5 +1,5 @@
 cask "tavern" do
-  version "0.1.7"
+  version "0.1.8"
 
   name "Tavern"
   desc "Modern Homebrew client built with Python and GTK 4"
@@ -11,7 +11,7 @@ cask "tavern" do
   end
 
   on_macos do
-    sha256 "ef12dc475a2b4c5eb5115b2a79316fbc1c8dcc7b264d18d0d1d96fc6fd7204c7"
+    sha256 "3e72e136b55696e1a3d1b6c08e5818d13aa0aaa1e75f1ccd425e36894d1780d0"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-macOS.zip"
 
     app "Tavern.app"
@@ -24,8 +24,10 @@ cask "tavern" do
   end
 
   on_linux do
-    sha256 "2d83cd78fde85d4faabaf3da300a28b742dba4ae3b3d5e3d6f05ff9149e8af12"
+    sha256 "0c34891fd9881bf9fe1238d6c4886fc9096f97782f293a4cb10631ee5828881b"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-Linux.AppImage"
+
+    depends_on formula: "pygobject3"
 
     binary "squashfs-root/AppRun", target: "tavern"
 
@@ -40,6 +42,23 @@ cask "tavern" do
       FileUtils.chmod 0o755, appimage_path
       system_command appimage_path, args: ["--appimage-extract"], chdir: staged_path
       FileUtils.rm appimage_path
+
+      # PATCH: fix AppRun's $0-based path resolution.
+      # When symlinked from HOMEBREW_PREFIX/bin, $0 is the symlink's dir,
+      # not the squashfs-root where the script actually lives.
+      # Replace:  this_dir="$(readlink -f "$(dirname "$0")")"
+      # With:     this_dir="$(dirname "$(readlink -f "$0")")"
+      apprun_path = "#{staged_path}/squashfs-root/AppRun"
+      apprun = File.read(apprun_path)
+      apprun.gsub!('this_dir="$(readlink -f "$(dirname "$0")")"',
+                   'this_dir="$(dirname "$(readlink -f "$0")")"')
+      # PATCH: set TAVERN_DATADIR so the Python script finds gresource/icons
+      # relative to the AppDir, not the hardcoded meson prefix (/usr/share/tavern)
+      apprun.sub!('exec "$this_dir"/AppRun.wrapped "$@"',
+                  "export TAVERN_DATADIR=\"$this_dir/usr/share/tavern\"\n" \
+                  "export TAVERN_LOCALEDIR=\"$this_dir/usr/share/locale\"\n" \
+                  'exec "$this_dir"/AppRun.wrapped "$@"')
+      File.write(apprun_path, apprun)
 
       FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
       FileUtils.mkdir_p "#{Dir.home}/.local/share/icons/hicolor/scalable/apps"

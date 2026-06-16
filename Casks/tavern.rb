@@ -1,5 +1,5 @@
 cask "tavern" do
-  version "0.1.8"
+  version "0.1.9"
 
   name "Tavern"
   desc "Modern Homebrew client built with Python and GTK 4"
@@ -11,20 +11,20 @@ cask "tavern" do
   end
 
   on_macos do
-    sha256 "3e72e136b55696e1a3d1b6c08e5818d13aa0aaa1e75f1ccd425e36894d1780d0"
+    sha256 "ae32e225e823d1654c2e83f98b93f87a9e153d71af5b5f7526ad391d910b1010"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-macOS.zip"
 
     app "Tavern.app"
 
     zap trash: [
       "~/Library/Application Support/Tavern",
-      "~/Library/Preferences/dev.hanthor.Tavern.*",
       "~/Library/Caches/dev.hanthor.Tavern",
+      "~/Library/Preferences/dev.hanthor.Tavern.*",
     ]
   end
 
   on_linux do
-    sha256 "0c34891fd9881bf9fe1238d6c4886fc9096f97782f293a4cb10631ee5828881b"
+    sha256 "0176f7a3c7372b04dfeda34405068edab8349bc017b48c016b0ea6d40e1e70b3"
     url "https://github.com/hanthor/Tavern/releases/download/v#{version}/Tavern-Linux.AppImage"
 
     depends_on formula: "pygobject3"
@@ -39,7 +39,7 @@ cask "tavern" do
 
     preflight do
       appimage_path = "#{staged_path}/Tavern-Linux.AppImage"
-      FileUtils.chmod 0o755, appimage_path
+      FileUtils.chmod 0755, appimage_path
       system_command appimage_path, args: ["--appimage-extract"], chdir: staged_path
       FileUtils.rm appimage_path
 
@@ -64,25 +64,25 @@ cask "tavern" do
       FileUtils.mkdir_p "#{Dir.home}/.local/share/icons/hicolor/scalable/apps"
 
       desktop = File.read("#{staged_path}/squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop")
-      desktop.gsub!(%r{^Exec=.*}, "Exec=#{HOMEBREW_PREFIX}/bin/tavern")
-      desktop.gsub!(%r{^Icon=.*}, "Icon=dev.hanthor.Tavern")
+      desktop.gsub!(/^Exec=.*/, "Exec=#{HOMEBREW_PREFIX}/bin/tavern")
+      desktop.gsub!(/^Icon=.*/, "Icon=dev.hanthor.Tavern")
       File.write("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop", desktop)
     end
 
     postflight do
       system_command "gtk-update-icon-cache",
-        args: ["-qtf", "#{Dir.home}/.local/share/icons/hicolor"],
-        sudo: false
-    rescue StandardError
+                     args: ["-qtf", "#{Dir.home}/.local/share/icons/hicolor"],
+                     sudo: false
+    rescue
       nil
     end
 
     zap trash: [
-      "~/.local/share/applications/dev.hanthor.Tavern.desktop",
-      "~/.local/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg",
-      "~/.local/share/dev.hanthor.Tavern",
-      "~/.config/dev.hanthor.Tavern",
       "~/.cache/tavern",
+      "~/.config/dev.hanthor.Tavern",
+      "~/.local/share/applications/dev.hanthor.Tavern.desktop",
+      "~/.local/share/dev.hanthor.Tavern",
+      "~/.local/share/icons/hicolor/scalable/apps/dev.hanthor.Tavern.svg",
     ]
   end
 end

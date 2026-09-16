@@ -34,8 +34,12 @@ cask "goose-linux" do
            target: "#{Dir.home}/.local/share/icons/Goose.png"
 
   preflight do
-    system "sh", "-c", "rpm2cpio '#{staged_path}/Goose-#{version}-1.x86_64.rpm' | cpio -idm --quiet",
-           chdir: staged_path
+    rpm_path = "#{staged_path}/Goose-#{version}-1.x86_64.rpm"
+    IO.popen(["rpm2cpio", rpm_path]) do |rpm_io|
+      IO.popen(["cpio", "-idm", "--quiet"], "w", chdir: staged_path) do |cpio_io|
+        IO.copy_stream(rpm_io, cpio_io)
+      end
+    end
 
     FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
     FileUtils.mkdir_p "#{Dir.home}/.local/share/icons"

@@ -69,7 +69,7 @@ cask "tavern" do
       File.write("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop", desktop)
     end
 
-    postflight do
+    postflight_steps do
       system_command "gtk-update-icon-cache",
         args: ["-qtf", "#{Dir.home}/.local/share/icons/hicolor"],
         sudo: false

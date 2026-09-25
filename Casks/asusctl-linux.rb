@@ -33,7 +33,7 @@ cask "asusctl-linux" do
   binary "#{release_root}/usr/bin/asusd"
   binary "#{release_root}/usr/bin/asus-shutdown"
 
-  postflight do
+  postflight_steps do
     release_dir = "#{staged_path}/#{release_root}"
     root_prefix = "/opt/ublue-asusctl"
     root_bin_dir = "#{root_prefix}/bin"

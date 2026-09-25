@@ -28,6 +28,13 @@ brew install --cask framework-tool
 brew install --cask antigravity-linux
 brew install --cask asusctl-linux
 brew install --cask rog-control-center-linux
+brew install --cask goose-linux
+brew install --cask tavern
+brew install --cask visual-studio-code-linux@insiders
+
+# Formulas
+brew install linux-mcp-server
+brew install pmbootstrap
 
 brew install --cask bluefin-wallpapers
 brew install --cask bluefin-wallpapers-extra
@@ -42,6 +49,8 @@ brew install --cask framework-wallpapers
 
 - heic-to-dynamic-gnome-wallpaper - Convert HEIC dynamic wallpapers to GNOME dynamic wallpapers
 - asusctl - cli for controlling Asus ROG laptops
+- linux-mcp-server - MCP server for Linux system administration and diagnostics
+- pmbootstrap - Sophisticated chroot / build / flash tool to develop and install postmarketOS
 
 ### GUI
 
@@ -49,9 +58,12 @@ brew install --cask framework-wallpapers
 - JetBrains Toolbox - JetBrains tools manager
 - LM Studio - Local LLM discovery, download, and runtime
 - Visual Studio Code - Microsoft's code editor
+- Visual Studio Code Insiders - Insiders build of VS Code
 - VSCodium - Open-source build of VS Code
 - Framework System Tool - Hardware management for Framework laptops
 - rog control center - GUI frontend for asusctl (for Asus ROG etc laptops)
+- Goose - Open source, extensible AI agent that goes beyond code suggestions
+- Tavern - Modern Homebrew client built with Python and GTK 4
 
 ### Wallpapers
 

@@ -24,7 +24,7 @@ cask "aurora-wallpapers" do
     end
   end
 
-  postflight do
+  postflight_steps do
     if File.exist?("/usr/bin/plasmashell")
       Dir.glob("#{staged_path}/kde/*").each do |dir|
         next if dir.include?("gnome-background-properties")
@@ -48,7 +48,7 @@ cask "aurora-wallpapers" do
     end
   end
 
-  uninstall_postflight do
+  uninstall_postflight_steps do
     FileUtils.rm_r "#{Dir.home}/.local/share/backgrounds/aurora"
   end
 

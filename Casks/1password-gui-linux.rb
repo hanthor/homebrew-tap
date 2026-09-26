@@ -55,7 +55,7 @@ cask "1password-gui-linux" do
     end
   end
 
-  postflight do
+  postflight_steps do
     system "echo", "Installing polkit policy file to /etc/polkit-1/actions/, you may be prompted for your password."
     if !File.exist?("/etc/polkit-1/actions/com.1password.1Password.policy") ||
        !FileUtils.identical?("#{staged_path}/1password-#{version}.#{arch_suffix}/com.1password.1Password.policy.tpl",
@@ -259,7 +259,7 @@ cask "1password-gui-linux" do
     system "sudo", "chown", "root:root", "#{staged_path}/1password-#{version}.#{arch_suffix}"
   end
 
-  uninstall_preflight do
+  uninstall_preflight_steps do
     system "#{staged_path}/1password-uninstall.sh"
   end
 

@@ -37,7 +37,7 @@ cask "tavern" do
     artifact "squashfs-root/usr/share/applications/dev.hanthor.Tavern.desktop",
              target: "#{Dir.home}/.local/share/applications/dev.hanthor.Tavern.desktop"
 
-    preflight do
+    preflight_steps do
       appimage_path = "#{staged_path}/Tavern-Linux.AppImage"
       FileUtils.chmod 0o755, appimage_path
       system_command appimage_path, args: ["--appimage-extract"], chdir: staged_path
@@ -69,7 +69,7 @@ cask "tavern" do
       File.write("#{staged_path}/squashfs-root/dev.hanthor.Tavern.desktop", desktop)
     end
 
-    postflight do
+    postflight_steps do
       system_command "gtk-update-icon-cache",
         args: ["-qtf", "#{Dir.home}/.local/share/icons/hicolor"],
         sudo: false

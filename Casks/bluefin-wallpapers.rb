@@ -54,7 +54,7 @@ cask "bluefin-wallpapers" do
     end
   end
 
-  preflight do
+  preflight_steps do
     FileUtils.mkdir_p "#{Dir.home}/Library/Desktop Pictures/Bluefin" if OS.mac?
 
     if OS.linux?
@@ -70,7 +70,7 @@ cask "bluefin-wallpapers" do
     end
   end
 
-  postflight do
+  postflight_steps do
     if OS.mac?
       puts "Wallpapers installed to: #{Dir.home}/Library/Desktop Pictures/Bluefin"
       puts "To use: System Settings > Wallpaper > Add Folder"

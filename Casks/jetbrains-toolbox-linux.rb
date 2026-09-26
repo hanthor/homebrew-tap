@@ -19,7 +19,7 @@ cask "jetbrains-toolbox-linux" do
   artifact "jetbrains-toolbox-#{version}/jetbrains-toolbox.desktop",
            target: "#{Dir.home}/.local/share/applications/jetbrains-toolbox.desktop"
 
-  preflight do
+  preflight_steps do
     FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
     # We need this file to start, but Jetbrains Toolbox will overwrite it on its first run with a proper one
     # It will also extract the icon from somewhere, but it doesn't exist until first run, so we just point to where it

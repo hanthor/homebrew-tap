@@ -30,7 +30,7 @@ cask "bazzite-wallpapers" do
     end
   end
 
-  preflight do
+  preflight_steps do
     Dir.glob("#{staged_path}/**/*.xml").each do |file|
       contents = File.read(file)
       contents.gsub!("~", Dir.home)

@@ -33,7 +33,7 @@ cask "asusctl-linux" do
   binary "#{release_root}/usr/bin/asusd"
   binary "#{release_root}/usr/bin/asus-shutdown"
 
-  postflight do
+  postflight_steps do
     release_dir = "#{staged_path}/#{release_root}"
     root_prefix = "/opt/ublue-asusctl"
     root_bin_dir = "#{root_prefix}/bin"
@@ -141,7 +141,7 @@ cask "asusctl-linux" do
     system "sudo", udevadm, "control", "--reload" if udevadm
   end
 
-  uninstall_preflight do
+  uninstall_preflight_steps do
     root_prefix = "/opt/ublue-asusctl"
     root_bin_dir = "#{root_prefix}/bin"
     systemd_dir = "/etc/systemd/system"

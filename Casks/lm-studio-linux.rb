@@ -26,7 +26,7 @@ cask "lm-studio-linux" do
   artifact "squashfs-root/lm-studio.desktop",
            target: "#{Dir.home}/.local/share/applications/lm-studio.desktop"
 
-  preflight do
+  preflight_steps do
     # Extract AppImage contents
     appimage_path = "#{staged_path}/LM-Studio-#{version}-x64.AppImage"
     system "chmod", "+x", appimage_path

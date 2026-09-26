@@ -31,7 +31,7 @@ cask "framework-wallpapers" do
     end
   end
 
-  preflight do
+  preflight_steps do
     FileUtils.mkdir_p "#{Dir.home}/Library/Desktop Pictures/Framework" if OS.mac?
 
     if OS.linux?
@@ -47,7 +47,7 @@ cask "framework-wallpapers" do
     end
   end
 
-  postflight do
+  postflight_steps do
     if OS.mac?
       Dir.glob("#{staged_path}/*").each do |file|
         target = "#{Dir.home}/Library/Desktop Pictures/Framework/#{File.basename(file)}"
@@ -85,7 +85,7 @@ cask "framework-wallpapers" do
     end
   end
 
-  uninstall_postflight do
+  uninstall_postflight_steps do
     FileUtils.rm_r "#{Dir.home}/Library/Desktop Pictures/Framework" if OS.mac?
 
     if OS.linux?

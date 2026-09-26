@@ -32,7 +32,7 @@ cask "rog-control-center-linux" do
   binary "#{release_root}/usr/bin/rog-control-center"
   binary "#{release_root}/usr/bin/asusd-user"
 
-  postflight do
+  postflight_steps do
     require "fileutils"
 
     release_dir = "#{staged_path}/#{release_root}"
@@ -100,7 +100,7 @@ cask "rog-control-center-linux" do
     system "update-desktop-database", applications_dir if desktop_db_cmd
   end
 
-  uninstall_postflight do
+  uninstall_postflight_steps do
     require "fileutils"
 
     applications_dir = "#{Dir.home}/.local/share/applications"

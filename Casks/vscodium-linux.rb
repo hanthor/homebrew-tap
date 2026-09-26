@@ -30,7 +30,7 @@ cask "vscodium-linux" do
   artifact "resources/app/resources/linux/code.png",
            target: "#{Dir.home}/.local/share/icons/vscodium.png"
 
-  preflight do
+  preflight_steps do
     FileUtils.mkdir_p("#{Dir.home}/.local/share/applications")
     FileUtils.mkdir_p("#{Dir.home}/.local/share/icons")
 

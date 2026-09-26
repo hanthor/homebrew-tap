@@ -31,7 +31,7 @@ cask "visual-studio-code-linux" do
   artifact "VSCode-linux-#{arch}/code-url-handler.desktop",
            target: "#{Dir.home}/.local/share/applications/code-url-handler.desktop"
 
-  preflight do
+  preflight_steps do
     # Disable VS Code's built-in update checks; Homebrew manages this install.
     product_json = "#{staged_path}/VSCode-linux-#{arch}/resources/app/product.json"
     product = JSON.parse(File.read(product_json))

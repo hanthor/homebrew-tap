@@ -31,7 +31,7 @@ cask "bluefin-wallpapers-extra" do
     end
   end
 
-  preflight do
+  preflight_steps do
     FileUtils.mkdir_p "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra" if OS.mac?
 
     if OS.linux?
@@ -47,7 +47,7 @@ cask "bluefin-wallpapers-extra" do
     end
   end
 
-  postflight do
+  postflight_steps do
     if OS.mac?
       Dir.glob("#{staged_path}/*").each do |file|
         target = "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra/#{File.basename(file)}"
@@ -87,7 +87,7 @@ cask "bluefin-wallpapers-extra" do
     end
   end
 
-  uninstall_postflight do
+  uninstall_postflight_steps do
     FileUtils.rm_r "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra" if OS.mac?
 
     if OS.linux?

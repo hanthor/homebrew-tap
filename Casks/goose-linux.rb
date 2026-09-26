@@ -33,11 +33,13 @@ cask "goose-linux" do
   artifact "usr/share/pixmaps/Goose.png",
            target: "#{Dir.home}/.local/share/icons/Goose.png"
 
-  preflight do
+  preflight_steps do
     rpm_path = "#{staged_path}/Goose-#{version}-1.x86_64.rpm"
-    IO.popen(["rpm2cpio", rpm_path]) do |rpm_io|
-      IO.popen(["cpio", "-idm", "--quiet"], "w", chdir: staged_path) do |cpio_io|
-        IO.copy_stream(rpm_io, cpio_io)
+    Dir.chdir(staged_path) do
+      IO.popen(["rpm2cpio", rpm_path]) do |rpm_io|
+        IO.popen(["cpio", "-idm", "--quiet"], "w") do |cpio_io|
+          IO.copy_stream(rpm_io, cpio_io)
+        end
       end
     end
 

@@ -1,6 +1,6 @@
 cask "jetbrains-toolbox-linux" do
-  version "3.4.3.81140"
-  sha256 "3873b1d438caa0dd58854d70633e7248de7a39bcf7bb8ae0154c7f175eba8349"
+  version "3.8.1.88030"
+  sha256 "25cbe2ad027f5a5749bf8d8ae7c2215a8665403cfe94ff5d05cd48b25daac345"
 
   url "https://download.jetbrains.com/toolbox/jetbrains-toolbox-#{version}.tar.gz"
   name "JetBrains Toolbox"
@@ -19,15 +19,15 @@ cask "jetbrains-toolbox-linux" do
   artifact "jetbrains-toolbox-#{version}/jetbrains-toolbox.desktop",
            target: "#{Dir.home}/.local/share/applications/jetbrains-toolbox.desktop"
 
-  preflight do
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
+  preflight_steps do
+    mkdir_p ".local/share/applications", base: :home
     # We need this file to start, but Jetbrains Toolbox will overwrite it on its first run with a proper one
     # It will also extract the icon from somewhere, but it doesn't exist until first run, so we just point to where it
     # should be, and it will get fixed on first run
-    File.write("#{staged_path}/jetbrains-toolbox-#{version}/jetbrains-toolbox.desktop", <<~EOS)
+    write_file "jetbrains-toolbox-{{version}}/jetbrains-toolbox.desktop", <<~EOS
       [Desktop Entry]
-      Icon=#{staged_path}/jetbrains-toolbox-#{version}/bin/toolbox-tray-color.png
-      Exec=#{HOMEBREW_PREFIX}/bin/jetbrains-toolbox %u
+      Icon={{staged_path}}/jetbrains-toolbox-{{version}}/bin/toolbox-tray-color.png
+      Exec={{HOMEBREW_PREFIX}}/bin/jetbrains-toolbox %u
       Version=1.0
       Type=Application
       Categories=Development

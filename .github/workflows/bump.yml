@@ -14,30 +14,30 @@ jobs:
       issues: write
 
     steps:
-      - name: Install Homebrew if missing
-        run: |
-          if ! /home/linuxbrew/.linuxbrew/bin/brew --version >/dev/null 2>&1; then
-            echo "Homebrew not found, installing..."
-            NONINTERACTIVE=1 /bin/bash -c \
-              "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          else
-            echo "Homebrew already installed"
-          fi
 
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew tap --force "${{ github.repository }}"
-
-          {
-            echo "HOMEBREW_PREFIX=$HOMEBREW_PREFIX"
-            echo "HOMEBREW_CELLAR=$HOMEBREW_CELLAR"
-            echo "HOMEBREW_REPOSITORY=$HOMEBREW_REPOSITORY"
-            echo "PATH=$PATH"
-            echo "MANPATH=$MANPATH"
-            echo "INFOPATH=$INFOPATH"
-          } >> "$GITHUB_ENV"
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@1e34f2e2acaa766b7efacb8c26352e6abbb023f9 # 2026.09.13.1
 
       - name: Configure git
-        uses: Homebrew/actions/git-user-config@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # main
+        uses: Homebrew/actions/git-user-config@1e34f2e2acaa766b7efacb8c26352e6abbb023f9 # 2026.09.13.1
+
+      - name: Checkout homebrew-core
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: Homebrew/homebrew-core
+          path: homebrew-core
+          fetch-depth: 1
+          sparse-checkout: |
+            Formula/
+
+      - name: Move homebrew-core to tap directory
+        run: |
+          BREW_REPO="$(brew --repo)"
+          CORE_TAP="$BREW_REPO/Library/Taps/homebrew/homebrew-core"
+
+          mkdir -p "$(dirname "$CORE_TAP")"
+          rm -rf "$CORE_TAP"
+          mv homebrew-core "$CORE_TAP"
 
       - name: Bump packages
         id: bump

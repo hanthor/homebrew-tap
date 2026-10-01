@@ -1,9 +1,8 @@
 cask "goose-linux" do
-  version "1.34.1"
-  sha256 "04938dd8d84f04e2a51c09dfd4a9396b473c870fb60e6cbf0c458db5c6111dff"
+  version "1.52.0"
+  sha256 "4e541f9cb7f5306eec648c9ee938139c692ef3c965591c9e112054bc14aadcfa"
 
-  url "https://github.com/block/goose/releases/download/v#{version}/Goose-#{version}-1.x86_64.rpm",
-      verified: "github.com/block/goose/"
+  url "https://github.com/block/goose/releases/download/v#{version}/Goose-#{version}-1.x86_64.rpm"
   name "Goose"
   desc "Open source, extensible AI agent that goes beyond code suggestions"
   homepage "https://block.github.io/goose/"
@@ -33,24 +32,23 @@ cask "goose-linux" do
   artifact "usr/share/pixmaps/Goose.png",
            target: "#{Dir.home}/.local/share/icons/Goose.png"
 
-  preflight do
-    system "sh", "-c", "rpm2cpio '#{staged_path}/Goose-#{version}-1.x86_64.rpm' | cpio -idm --quiet",
-           chdir: staged_path
+  preflight_steps do
+    run "sh", args: ["-c", "rpm2cpio '{{staged_path}}/Goose-#{version}-1.x86_64.rpm' | cpio -idm --quiet"], chdir: "."
 
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/icons"
+    mkdir_p ".local/share/applications", base: :home
+    mkdir_p ".local/share/icons", base: :home
 
-    File.write("#{staged_path}/Goose.desktop", <<~EOS)
+    write_file "Goose.desktop", <<~EOS
       [Desktop Entry]
       Name=Goose
       Comment=Open source, extensible AI agent that goes beyond code suggestions
-      Exec=#{HOMEBREW_PREFIX}/bin/goose-desktop %U
-      Icon=#{Dir.home}/.local/share/icons/Goose.png
+      Exec={{HOMEBREW_PREFIX}}/bin/goose-desktop %U
+      Icon=Goose
       Terminal=false
       Type=Application
       Categories=Development;
       MimeType=x-scheme-handler/goose;
-      StartupWMClass=Goose
+      StartupWMClass=goose
     EOS
   end
 

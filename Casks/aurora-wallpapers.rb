@@ -13,47 +13,54 @@ cask "aurora-wallpapers" do
     strategy :github_releases
   end
 
-  preflight do
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/backgrounds/aurora"
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/gnome-background-properties"
-
-    Dir.glob("#{staged_path}/**/*.xml").each do |file|
-      contents = File.read(file)
-      contents.gsub!("~", Dir.home)
-      File.write(file, contents)
-    end
+  preflight_steps do
+    symlink ".", ".user-home", source_base: :home, overwrite: true
+    run "/bin/sh", args: ["-eu", "-c", <<~'SH'], chdir: "{{staged_path}}"
+      WALLPAPER_HOME=$(readlink .user-home)
+      replacement=$(printf '%s' "$WALLPAPER_HOME" | sed 's/[\\&|]/\\&/g')
+      find . -type f -name '*.xml' -exec sed -i.brew-home-backup "s|~|$replacement|g" {} +
+      find . -type f -name '*.xml.brew-home-backup' -delete
+    SH
   end
 
-  postflight do
-    if File.exist?("/usr/bin/plasmashell")
-      Dir.glob("#{staged_path}/kde/*").each do |dir|
-        next if dir.include?("gnome-background-properties")
-
-        target = "#{Dir.home}/.local/share/backgrounds/aurora/#{File.basename(dir)}"
-        FileUtils.ln_sf(dir, target)
-      end
-    else
-      Dir.glob("#{staged_path}/kde/*").each do |dir|
-        Dir.glob("#{dir}/contents/images/*").each do |file|
-          extension = File.extname(file)
-          target = "#{Dir.home}/.local/share/backgrounds/aurora/#{File.basename(dir)}#{extension}"
-          FileUtils.ln_sf(file, target)
-        end
-
-        Dir.glob("#{dir}/gnome-background-properties/*").each do |file|
-          target = "#{Dir.home}/.local/share/gnome-background-properties/#{File.basename(file)}"
-          FileUtils.ln_sf(file, target)
-        end
-      end
-    end
+  postflight_steps do
+    mkdir_p ".local/share/backgrounds/aurora", base: :home
+    mkdir_p ".local/share/gnome-background-properties", base: :home
+    # Discover the payload after extraction, not while loading the cask for CI/API use.
+    run "/bin/bash", chdir: "{{staged_path}}",
+                     env: { "WALLPAPER_HOME" => "{{staged_path}}/.user-home" },
+                     writable_paths: [".local/share/backgrounds/aurora", ".local/share/gnome-background-properties"],
+                     writable_base: :home, args: ["-eu", "-c", <<~SH]
+                       shopt -s nullglob
+                       destination="$WALLPAPER_HOME/.local/share/backgrounds/aurora"
+                       if [ -e /usr/bin/plasmashell ]; then
+                         for dir in "$PWD"/kde/*; do
+                           case "$dir" in *gnome-background-properties*) continue ;; esac
+                           ln -sfn "$dir" "$destination/$(basename "$dir")"
+                         done
+                       else
+                         for dir in "$PWD"/kde/*; do
+                           for file in "$dir"/contents/images/*; do
+                             name="$(basename "$file")"
+                             extension=""
+                             case "$name" in *.*) extension=".${name##*.}" ;; esac
+                             ln -sfn "$file" "$destination/$(basename "$dir")$extension"
+                           done
+                           for file in "$dir"/gnome-background-properties/*; do
+                             ln -sfn "$file" "$WALLPAPER_HOME/.local/share/gnome-background-properties/$(basename "$file")"
+                           done
+                         done
+                       fi
+                     SH
   end
 
-  uninstall_postflight do
-    FileUtils.rm_r "#{Dir.home}/.local/share/backgrounds/aurora"
+  uninstall_postflight_steps do
+    remove [".local/share/backgrounds/aurora/**/*", ".local/share/gnome-background-properties/*.xml"],
+           base: :home, symlink_target_contains: "/aurora-wallpapers/"
   end
 
   zap trash: [
-    "#{Dir.home}/.local/share/backgrounds/aurora",
-    "#{Dir.home}/.local/share/gnome-background-properties/aurora-*.xml",
+    "~/.local/share/backgrounds/aurora",
+    "~/.local/share/gnome-background-properties/aurora-*.xml",
   ]
 end

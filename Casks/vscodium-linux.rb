@@ -2,12 +2,11 @@ cask "vscodium-linux" do
   arch arm: "arm64", intel: "x64"
   os linux: "linux"
 
-  version "1.116.02821"
-
-  on_linux do
-    sha256 arm64_linux:  "d3d0b9111fe7641a615876514407fda3f87207aa9cda6a88bb138b35d95549f5",
-           x86_64_linux: "82c7173d6aa7415f6777d5d66cbe58902772c719c30c46385a9140831e46edad"
-  end
+  version "1.135.06055"
+  sha256 arm:          "9765cea4f707ff7dc83a40be408a7318a59abb6996b359631639d9aab2f48a90",
+         intel:        "c09d8ac8dd7f52b09ee159ee24b440541dfd8f937a0f6f88cc428c78e48ee1f2",
+         arm64_linux:  "9765cea4f707ff7dc83a40be408a7318a59abb6996b359631639d9aab2f48a90",
+         x86_64_linux: "c09d8ac8dd7f52b09ee159ee24b440541dfd8f937a0f6f88cc428c78e48ee1f2"
 
   url "https://github.com/VSCodium/vscodium/releases/download/#{version}/VSCodium-linux-#{arch}-#{version}.tar.gz"
   name "VSCodium"
@@ -18,6 +17,8 @@ cask "vscodium-linux" do
     url :url
     strategy :github_latest
   end
+
+  depends_on formula: "jq"
 
   binary "bin/codium"
   binary "bin/codium-tunnel"
@@ -30,16 +31,24 @@ cask "vscodium-linux" do
   artifact "resources/app/resources/linux/code.png",
            target: "#{Dir.home}/.local/share/icons/vscodium.png"
 
-  preflight do
-    FileUtils.mkdir_p("#{Dir.home}/.local/share/applications")
-    FileUtils.mkdir_p("#{Dir.home}/.local/share/icons")
+  preflight_steps do
+    if_path_exists "resources/app/product.json" do
+      run "{{HOMEBREW_PREFIX}}/bin/jq",
+          args:        ["del(.updateUrl) | .configurationDefaults[\"update.mode\"] = \"none\"",
+                        "{{staged_path}}/resources/app/product.json"],
+          stdout_path: "product.json"
+      move "product.json", "resources/app/product.json"
+    end
 
-    File.write("#{staged_path}/codium.desktop", <<~EOS)
+    mkdir_p ".local/share/applications", base: :home
+    mkdir_p ".local/share/icons", base: :home
+
+    write_file "codium.desktop", <<~EOS
       [Desktop Entry]
       Name=VSCodium
       Comment=Code Editing. Redefined.
       GenericName=Text Editor
-      Exec=#{HOMEBREW_PREFIX}/bin/codium %F
+      Exec={{HOMEBREW_PREFIX}}/bin/codium %F
       Icon=vscodium
       Type=Application
       StartupNotify=false
@@ -60,15 +69,15 @@ cask "vscodium-linux" do
       Name[ru]=Новое пустое окно
       Name[zh_CN]=新建空窗口
       Name[zh_TW]=開新空視窗
-      Exec=#{HOMEBREW_PREFIX}/bin/codium --new-window %F
+      Exec={{HOMEBREW_PREFIX}}/bin/codium --new-window %F
       Icon=vscodium
     EOS
-    File.write("#{staged_path}/codium-url-handler.desktop", <<~EOS)
+    write_file "codium-url-handler.desktop", <<~EOS
       [Desktop Entry]
       Name=VSCodium - URL Handler
       Comment=Code Editing. Redefined.
       GenericName=Text Editor
-      Exec=#{HOMEBREW_PREFIX}/bin/codium --open-url %U
+      Exec={{HOMEBREW_PREFIX}}/bin/codium --open-url %U
       Icon=vscodium
       Type=Application
       NoDisplay=true

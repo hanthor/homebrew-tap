@@ -2,50 +2,58 @@ cask "visual-studio-code-linux" do
   arch arm: "arm64", intel: "x64"
   os linux: "linux"
 
-  version "1.119.0"
+  version "1.140.0,07f806f999227108933c2e30515b26eecc1fda74"
+  sha256 arm:          "9609a7655c4bc2a101b343ff22aa91f6678b46d9565b914c0608bd7f2e577fa6",
+         intel:        "d32031e9e213d59532af3cf32fcb8b357a1cdd10417967b4f5b5ba30436dc0dc",
+         arm64_linux:  "9609a7655c4bc2a101b343ff22aa91f6678b46d9565b914c0608bd7f2e577fa6",
+         x86_64_linux: "d32031e9e213d59532af3cf32fcb8b357a1cdd10417967b4f5b5ba30436dc0dc"
 
-  on_linux do
-    sha256 arm64_linux:  "a34255d5573abad4e62641fdb934b2941b183379807e20c88308372d438159bd",
-           x86_64_linux: "1dc648446074cbc53986ec5737d8cdae1303d098e69fe40d514eb410719db97a"
-  end
-
-  url "https://update.code.visualstudio.com/#{version}/#{os}-#{arch}/stable"
+  url "https://update.code.visualstudio.com/commit:#{version.csv.second}/linux-#{arch}/stable"
   name "Microsoft Visual Studio Code"
   name "VS Code"
   desc "Open-source code editor"
   homepage "https://code.visualstudio.com/"
 
   livecheck do
-    url "https://update.code.visualstudio.com/api/update/#{os}-#{arch}/stable/latest"
+    url "https://update.code.visualstudio.com/api/update/linux-#{arch}/stable/latest"
     strategy :json do |json|
-      json["productVersion"]
+      version = json["productVersion"]
+      build = json["version"]
+      next if version.blank? || build.blank?
+
+      "#{version},#{build}"
     end
   end
 
-  binary "VSCode-linux-#{arch}/bin/code"
-  binary "VSCode-linux-#{arch}/bin/code-tunnel"
-  bash_completion "#{staged_path}/VSCode-linux-#{arch}/resources/completions/bash/code"
-  zsh_completion  "#{staged_path}/VSCode-linux-#{arch}/resources/completions/zsh/_code"
-  artifact "VSCode-linux-#{arch}/code.desktop",
+  depends_on formula: "jq"
+
+  binary "vscode/bin/code"
+  binary "vscode/bin/code-tunnel"
+  bash_completion "vscode/resources/completions/bash/code"
+  zsh_completion  "vscode/resources/completions/zsh/_code"
+  artifact "vscode/code.desktop",
            target: "#{Dir.home}/.local/share/applications/code.desktop"
-  artifact "VSCode-linux-#{arch}/code-url-handler.desktop",
+  artifact "vscode/code-url-handler.desktop",
            target: "#{Dir.home}/.local/share/applications/code-url-handler.desktop"
 
-  preflight do
-    # Disable VS Code's built-in update checks; Homebrew manages this install.
-    product_json = "#{staged_path}/VSCode-linux-#{arch}/resources/app/product.json"
-    product = JSON.parse(File.read(product_json))
-    product.delete("updateUrl")
-    File.write(product_json, JSON.pretty_generate(product))
+  preflight_steps do
+    move "VSCode-linux-*", "vscode", source_glob: true
+    # Parse JSON rather than relying on the upstream file's formatting.
+    run "{{HOMEBREW_PREFIX}}/bin/jq",
+        args:        ["del(.updateUrl) | .configurationDefaults[\"update.mode\"] = \"none\"",
+                      "{{staged_path}}/vscode/resources/app/product.json"],
+        stdout_path: "product.json"
+    # Keep sandbox write declarations out of the not-yet-renamed directory.
+    run "/bin/mv", args: ["{{staged_path}}/product.json", "{{staged_path}}/vscode/resources/app/product.json"]
 
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
-    File.write("#{staged_path}/VSCode-linux-#{arch}/code.desktop", <<~EOS)
+    mkdir_p ".local/share/applications", base: :home
+    write_file "code.desktop", <<~EOS
       [Desktop Entry]
       Name=Visual Studio Code
       Comment=Code Editing. Redefined.
       GenericName=Text Editor
-      Exec=#{HOMEBREW_PREFIX}/bin/code %F
-      Icon=#{staged_path}/VSCode-linux-#{arch}/resources/app/resources/linux/code.png
+      Exec={{HOMEBREW_PREFIX}}/bin/code %F
+      Icon={{staged_path}}/vscode/resources/app/resources/linux/code.png
       Type=Application
       StartupNotify=false
       StartupWMClass=Code
@@ -66,16 +74,16 @@ cask "visual-studio-code-linux" do
       Name[ru]=Новое пустое окно
       Name[zh_CN]=新建空窗口
       Name[zh_TW]=開新空視窗
-      Exec=#{HOMEBREW_PREFIX}/bin/code --new-window %F
-      Icon=#{staged_path}/VSCode-linux-#{arch}/resources/app/resources/linux/code.png
+      Exec={{HOMEBREW_PREFIX}}/bin/code --new-window %F
+      Icon={{staged_path}}/vscode/resources/app/resources/linux/code.png
     EOS
-    File.write("#{staged_path}/VSCode-linux-#{arch}/code-url-handler.desktop", <<~EOS)
+    write_file "code-url-handler.desktop", <<~EOS
       [Desktop Entry]
       Name=Visual Studio Code - URL Handler
       Comment=Code Editing. Redefined.
       GenericName=Text Editor
-      Exec=#{HOMEBREW_PREFIX}/bin/code --open-url %U
-      Icon=#{staged_path}/VSCode-linux-#{arch}/resources/app/resources/linux/code.png
+      Exec={{HOMEBREW_PREFIX}}/bin/code --open-url %U
+      Icon={{staged_path}}/vscode/resources/app/resources/linux/code.png
       Type=Application
       NoDisplay=true
       StartupNotify=true
@@ -83,6 +91,8 @@ cask "visual-studio-code-linux" do
       MimeType=x-scheme-handler/vscode;
       Keywords=vscode;
     EOS
+    run "/bin/mv", args: ["{{staged_path}}/code.desktop", "{{staged_path}}/code-url-handler.desktop",
+                          "{{staged_path}}/vscode/"]
   end
 
   zap trash: [

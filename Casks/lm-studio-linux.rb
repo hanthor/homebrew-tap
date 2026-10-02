@@ -1,6 +1,6 @@
 cask "lm-studio-linux" do
-  version "0.4.13-1"
-  sha256 "20786a02c6158b55c26abcb1ac4ca16a40f2c9edaf7a16ec27bede17af0a6888"
+  version "0.4.25-1"
+  sha256 "eca467446c833824697e8befab300fe5269fdf984e3ee4385fcbad8502f07c53"
 
   url "https://installers.lmstudio.ai/linux/x64/#{version}/LM-Studio-#{version}-x64.AppImage"
   name "LM Studio"
@@ -21,26 +21,21 @@ cask "lm-studio-linux" do
   depends_on formula: "squashfs"
 
   binary "squashfs-root/AppRun", target: "lm-studio"
-  artifact "squashfs-root/usr/share/icons/hicolor/0x0/apps/lm-studio.png",
+  artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/lm-studio.png",
            target: "#{Dir.home}/.local/share/icons/lm-studio.png"
-  artifact "squashfs-root/lm-studio.desktop",
+  artifact "squashfs-root/ai.elementlabs.lmstudio.desktop",
            target: "#{Dir.home}/.local/share/applications/lm-studio.desktop"
 
-  preflight do
-    # Extract AppImage contents
-    appimage_path = "#{staged_path}/LM-Studio-#{version}-x64.AppImage"
-    system "chmod", "+x", appimage_path
-    system appimage_path, "--appimage-extract", chdir: staged_path
-
-    # Remove the original AppImage to save space
-    FileUtils.rm appimage_path
-
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/icons"
-
-    desktop_content = File.read("#{staged_path}/squashfs-root/lm-studio.desktop")
-    desktop_content.gsub!(/^Exec=.*/, "Exec=#{HOMEBREW_PREFIX}/bin/lm-studio")
-    File.write("#{staged_path}/squashfs-root/lm-studio.desktop", desktop_content)
+  preflight_steps do
+    set_permissions "LM-Studio-{{version}}-x64.AppImage", "+x", recursive: false
+    run "LM-Studio-{{version}}-x64.AppImage", args: ["--appimage-extract"],
+                                           base: :staged_path, chdir: "{{staged_path}}"
+    remove "LM-Studio-{{version}}-x64.AppImage"
+    mkdir_p ".local/share/applications", base: :home
+    mkdir_p ".local/share/icons", base: :home
+    # The desktop file does not exist until the AppImage has been extracted.
+    run "/bin/sed", args: ["-i", "s|^Exec=.*|Exec={{HOMEBREW_PREFIX}}/bin/lm-studio|",
+                           "{{staged_path}}/squashfs-root/ai.elementlabs.lmstudio.desktop"]
   end
 
   zap trash: "~/.config/LMStudio"

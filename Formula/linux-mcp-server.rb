@@ -21,8 +21,6 @@ class LinuxMcpServer < Formula
   depends_on "cmake" => :build
   depends_on "pkgconf" => :build
   depends_on "rust" => :build
-  depends_on "block-goose-cli"
-  depends_on "gemini-cli"
   depends_on "libffi"
   depends_on "libyaml"
   depends_on "openssl@3"
@@ -469,6 +467,10 @@ class LinuxMcpServer < Formula
 
   def caveats
     <<~EOS
+      This is an MCP server; an MCP client spawns it over stdio. Install the
+      client you want separately, for example:
+        brew install block-goose-cli gemini-cli
+
       To configure goose to use linux-mcp-server, run:
         goose-mcp-setup
 

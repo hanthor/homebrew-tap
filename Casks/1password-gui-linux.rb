@@ -42,7 +42,7 @@ cask "1password-gui-linux" do
   artifact "1password-#{version}.#{arch_suffix}/resources/custom_allowed_browsers",
            target: "#{HOMEBREW_PREFIX}/etc/1password/custom_allowed_browsers"
 
-  preflight_steps do
+  preflight do
     desktop_file = "#{staged_path}/1password-#{version}.#{arch_suffix}/resources/1password.desktop"
     text = File.read(desktop_file)
     new_contents = text.gsub("Exec=/opt/1Password/1password", "Exec=#{HOMEBREW_PREFIX}/bin/1password")
@@ -55,7 +55,7 @@ cask "1password-gui-linux" do
     end
   end
 
-  postflight_steps do
+  postflight do
     system "echo", "Installing polkit policy file to /etc/polkit-1/actions/, you may be prompted for your password."
     if !File.exist?("/etc/polkit-1/actions/com.1password.1Password.policy") ||
        !FileUtils.identical?("#{staged_path}/1password-#{version}.#{arch_suffix}/com.1password.1Password.policy.tpl",
@@ -257,7 +257,7 @@ cask "1password-gui-linux" do
     system "sudo", "chown", "root:root", "#{staged_path}/1password-#{version}.#{arch_suffix}"
   end
 
-  uninstall_preflight_steps do
+  uninstall_preflight do
     system "#{staged_path}/1password-uninstall.sh"
   end
 

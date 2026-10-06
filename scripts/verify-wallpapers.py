@@ -14,49 +14,15 @@ Usage:
 from __future__ import annotations
 
 import hashlib
-import re
 import sys
 from pathlib import Path
 from urllib.request import urlopen
 
+from wallpaper_casks import extract_pairs
+
 SCRIPT_DIR = Path(__file__).parent
 CASKS_DIR = SCRIPT_DIR.parent / "Casks"
 DEFAULT_GLOB = "*wallpapers*.rb"
-
-TOKEN_RE = re.compile(r'(url|sha256)\s+"([^"]+)"')
-SHA_RE = re.compile(r"[0-9a-f]{64}")
-VERSION_RE = re.compile(r'version\s+"([^"]+)"')
-LIVECHECK_RE = re.compile(r"livecheck\s+do\b.*?\bend\b", re.DOTALL)
-
-
-def extract_pairs(cask_path: Path) -> list[tuple[str, str]]:
-    content = LIVECHECK_RE.sub("", cask_path.read_text())
-    version_match = VERSION_RE.search(content)
-    if not version_match:
-        raise ValueError(f"No version found in {cask_path}")
-    version = version_match.group(1)
-
-    tokens = [
-        (kind, value)
-        for kind, value in TOKEN_RE.findall(content)
-        if kind == "url" or SHA_RE.fullmatch(value)
-    ]
-
-    pairs: list[tuple[str, str]] = []
-    i = 0
-    while i < len(tokens) - 1:
-        a, b = tokens[i], tokens[i + 1]
-        if {a[0], b[0]} == {"url", "sha256"}:
-            url = a[1] if a[0] == "url" else b[1]
-            sha = b[1] if a[0] == "url" else a[1]
-            url = url.replace("#{version}", version)
-            if "#{" in url:
-                raise ValueError(f"Unresolved interpolation in URL: {url}")
-            pairs.append((url, sha))
-            i += 2
-        else:
-            i += 1
-    return pairs
 
 
 def fetch_sha256(url: str) -> str:
@@ -71,13 +37,13 @@ def verify_cask(cask_path: Path) -> list[str]:
     failures: list[str] = []
     pairs = extract_pairs(cask_path)
     print(f"=== {cask_path.name} ({len(pairs)} variants) ===")
-    for url, expected in pairs:
-        actual = fetch_sha256(url)
-        status = "OK" if actual == expected else "MISMATCH"
-        print(f"  [{status}] {url.rsplit('/', 1)[-1]}")
-        if actual != expected:
+    for pair in pairs:
+        actual = fetch_sha256(pair.url)
+        status = "OK" if actual == pair.sha256 else "MISMATCH"
+        print(f"  [{status}] {pair.url.rsplit('/', 1)[-1]}")
+        if actual != pair.sha256:
             failures.append(
-                f"{cask_path.name}: {url}\n    expected {expected}\n    actual   {actual}"
+                f"{cask_path.name}: {pair.url}\n    expected {pair.sha256}\n    actual   {actual}"
             )
     return failures
 

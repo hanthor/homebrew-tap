@@ -33,7 +33,7 @@ cask "goose-linux" do
            target: "#{Dir.home}/.local/share/icons/Goose.png"
 
   preflight_steps do
-    run "/bin/sh", args: ["-eu", "-c", <<~'SH', "--", "{{staged_path}}", version.to_s], chdir: "."
+    run "/bin/sh", args: ["-eu", "-c", <<~SH, "--", "{{staged_path}}", version.to_s]
       stage=$1
       ver=$2
       rpm2cpio "$stage/Goose-${ver}-1.x86_64.rpm" | cpio -idm --quiet

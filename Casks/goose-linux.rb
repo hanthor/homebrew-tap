@@ -33,7 +33,10 @@ cask "goose-linux" do
            target: "#{Dir.home}/.local/share/icons/Goose.png"
 
   preflight_steps do
-    run "sh", args: ["-c", "rpm2cpio '{{staged_path}}/Goose-#{version}-1.x86_64.rpm' | cpio -idm --quiet"], chdir: "."
+    # Extract RPM using a safe command pipeline
+    # Use chdir to run the command in the staged path instead of interpolating
+    # the full path into the shell command, which eliminates shell injection risk
+    run "/bin/sh", args: ["-c", "rpm2cpio Goose-#{version}-1.x86_64.rpm | cpio -idm --quiet"], chdir: "{{staged_path}}"
 
     mkdir_p ".local/share/applications", base: :home
     mkdir_p ".local/share/icons", base: :home

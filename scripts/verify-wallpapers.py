@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 from urllib.request import urlopen
 
-SCRIPT_DIR = Path(__file__).parent
-CASKS_DIR = SCRIPT_DIR.parent / "Casks"
+from wallpaper_utils import CASKS_DIR
+
 DEFAULT_GLOB = "*wallpapers*.rb"
 
 TOKEN_RE = re.compile(r'(url|sha256)\s+"([^"]+)"')

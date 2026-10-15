@@ -1,4 +1,4 @@
-tap "ublue-os/tap"
+tap "hanthor/tap"
 
 cask "aurora-wallpapers"
 cask "bazzite-wallpapers"

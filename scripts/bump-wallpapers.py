@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import socket
 import logging
 import os
 import re
@@ -131,8 +132,12 @@ def get_releases() -> list[Release]:
     if token:
         headers["Authorization"] = "Bearer " + token
     request = Request(GITHUB_API_URL, headers=headers)
-    with urlopen(request) as response:
-        return json.loads(response.read().decode())
+    socket.setdefaulttimeout(30)
+    try:
+        with urlopen(request) as response:
+            return json.loads(response.read().decode())
+    finally:
+        socket.setdefaulttimeout(None)
 
 
 def find_release(releases: list[Release], tag_prefix: str, version: str | None = None) -> Release:

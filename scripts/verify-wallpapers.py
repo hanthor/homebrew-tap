@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import re
 import sys
+import socket
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -61,9 +62,13 @@ def extract_pairs(cask_path: Path) -> list[tuple[str, str]]:
 
 def fetch_sha256(url: str) -> str:
     h = hashlib.sha256()
-    with urlopen(url) as response:
-        while chunk := response.read(1 << 20):
-            h.update(chunk)
+    socket.setdefaulttimeout(30)
+    try:
+        with urlopen(url) as response:
+            while chunk := response.read(1 << 20):
+                h.update(chunk)
+    finally:
+        socket.setdefaulttimeout(None)
     return h.hexdigest()
 
 

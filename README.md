@@ -13,13 +13,14 @@ We have some in-progress, but not quite finished formulas and casks in an [exper
 IDEs like Jetbrains and VSCode. They don't run well out of flatpaks so we put them on their own images. This lets the user also opt-into vscode instead of having it on a -dx image even if you don't use it.
 
 ```shell
-brew tap ublue-os/tap
+brew tap hanthor/homebrew-tap
 
 # Formulas
 brew install heic-to-dynamic-gnome-wallpaper
 
 # Casks
 brew install --cask visual-studio-code-linux
+brew install --cask visual-studio-code-linux@insiders
 brew install --cask vscodium-linux
 brew install --cask jetbrains-toolbox-linux
 brew install --cask lm-studio-linux
@@ -28,6 +29,8 @@ brew install --cask framework-tool
 brew install --cask antigravity-linux
 brew install --cask asusctl-linux
 brew install --cask rog-control-center-linux
+brew install --cask goose-linux
+brew install --cask tavern
 
 brew install --cask bluefin-wallpapers
 brew install --cask bluefin-wallpapers-extra
@@ -49,9 +52,12 @@ brew install --cask framework-wallpapers
 - JetBrains Toolbox - JetBrains tools manager
 - LM Studio - Local LLM discovery, download, and runtime
 - Visual Studio Code - Microsoft's code editor
+- Visual Studio Code Insiders - Pre-release builds of VS Code
 - VSCodium - Open-source build of VS Code
 - Framework System Tool - Hardware management for Framework laptops
 - rog control center - GUI frontend for asusctl (for Asus ROG etc laptops)
+- Goose - Open source, extensible AI agent
+- Tavern - Open-source HTTP testing tool
 
 ### Wallpapers
 

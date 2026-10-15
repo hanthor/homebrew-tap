@@ -13,7 +13,8 @@ We have some in-progress, but not quite finished formulas and casks in an [exper
 IDEs like Jetbrains and VSCode. They don't run well out of flatpaks so we put them on their own images. This lets the user also opt-into vscode instead of having it on a -dx image even if you don't use it.
 
 ```shell
-brew tap ublue-os/tap
+brew tap hanthor/tap
+brew trust hanthor/tap
 
 # Formulas
 brew install heic-to-dynamic-gnome-wallpaper

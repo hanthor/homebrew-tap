@@ -2,6 +2,9 @@
 """
 Bump wallpaper casks with all SHA256 variants.
 
+Cask metadata is centralized in cask_metadata.py to eliminate duplication
+and ensure consistency across bump-wallpapers.py and verify-wallpapers.py.
+
 Usage:
     ./scripts/bump-wallpapers.py                     # bump all to latest
     ./scripts/bump-wallpapers.py bluefin-wallpapers  # bump specific cask to latest
@@ -16,12 +19,12 @@ import logging
 import os
 import re
 import sys
-from dataclasses import dataclass, field
-from enum import Enum
 from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.request import Request, urlopen
+
+from cask_metadata import CASKS, CASK_NAMES, Variant, get_cask_by_name
 
 if TYPE_CHECKING:
     from typing import TypeAlias
@@ -30,8 +33,6 @@ if TYPE_CHECKING:
     Asset: TypeAlias = dict[str, any]
 
 __all__ = [
-    "Variant",
-    "CaskConfig",
     "BumpError",
     "ReleaseNotFoundError",
     "AssetNotFoundError",
@@ -62,65 +63,6 @@ class AssetNotFoundError(BumpError):
 class CaskFileNotFoundError(BumpError):
     """Raised when a cask file cannot be found."""
 
-
-class Variant(Enum):
-    """Wallpaper package variants."""
-
-    MACOS = "macos"
-    KDE = "kde"
-    GNOME = "gnome"
-    PNG = "png"
-
-
-@dataclass
-class CaskConfig:
-    """Configuration for a wallpaper cask."""
-
-    name: str
-    release_prefix: str
-    artifact_name: str
-    variants: list[Variant] = field(default_factory=lambda: list(Variant))
-
-    @property
-    def cask_file(self) -> Path:
-        """Path to the cask file."""
-        return CASKS_DIR / f"{self.name}.rb"
-
-    def get_tag(self, version: str) -> str:
-        """Get the release tag for a version."""
-        return f"{self.release_prefix}-v{version}"
-
-    def get_asset_name(self, variant: Variant) -> str:
-        """Get the asset filename for a variant."""
-        return f"{self.artifact_name}-{variant.value}.tar.zstd"
-
-
-# Cask configurations
-CASKS = [
-    CaskConfig(
-        name="bluefin-wallpapers",
-        release_prefix="bluefin",
-        artifact_name="bluefin-wallpapers",
-    ),
-    CaskConfig(
-        name="bluefin-wallpapers-extra",
-        release_prefix="bluefin-extra",
-        artifact_name="bluefin-wallpapers-extra",
-    ),
-    CaskConfig(
-        name="framework-wallpapers",
-        release_prefix="framework",
-        artifact_name="framework-wallpapers",
-    ),
-    CaskConfig(
-        name="aurora-wallpapers",
-        release_prefix="aurora",
-        artifact_name="aurora-wallpapers",
-        variants=[],  # Single variant, no suffix
-    ),
-]
-
-CASK_BY_NAME = {cask.name: cask for cask in CASKS}
 
 @cache
 def get_releases() -> list[Release]:
@@ -198,10 +140,15 @@ def get_current_version(content: str) -> str:
     return "unknown"
 
 
-def bump_cask(config: CaskConfig, version: str | None = None) -> None:
+def bump_cask(cask_name: str, version: str | None = None) -> None:
     """Bump a wallpaper cask to a specific or latest version."""
-    if not config.cask_file.exists():
-        raise CaskFileNotFoundError(f"Cask file not found: {config.cask_file}")
+    config = get_cask_by_name(cask_name)
+    if not config:
+        raise CaskFileNotFoundError(f"Unknown cask: {cask_name}")
+
+    cask_file = CASKS_DIR / f"{config.name}.rb"
+    if not cask_file.exists():
+        raise CaskFileNotFoundError(f"Cask file not found: {cask_file}")
 
     releases = get_releases()
     release = find_release(releases, config.release_prefix, version)
@@ -209,7 +156,7 @@ def bump_cask(config: CaskConfig, version: str | None = None) -> None:
 
     logger.info("Bumping %s to %s", config.name, target_version)
 
-    content = config.cask_file.read_text()
+    content = cask_file.read_text()
     current_version = get_current_version(content)
     logger.info("  Current version: %s", current_version)
 
@@ -230,7 +177,7 @@ def bump_cask(config: CaskConfig, version: str | None = None) -> None:
         logger.info("  SHA256: %s", sha256)
         content = update_single_sha256(content, sha256)
 
-    config.cask_file.write_text(content)
+    cask_file.write_text(content)
     logger.info("  Done!")
 
 
@@ -238,11 +185,11 @@ def bump_all(version: str | None = None) -> bool:
     """Bump all wallpaper casks. Returns True if all succeeded."""
     success = True
 
-    for config in CASKS:
+    for cask in CASKS:
         try:
-            bump_cask(config, version)
+            bump_cask(cask.name, version)
         except BumpError as e:
-            logger.error("Failed to bump %s: %s", config.name, e)
+            logger.error("Failed to bump %s: %s", cask.name, e)
             success = False
 
     return success
@@ -266,7 +213,7 @@ def main() -> int:
     parser.add_argument(
         "cask",
         nargs="?",
-        choices=list(CASK_BY_NAME.keys()),
+        choices=list(CASK_NAMES),
         metavar="CASK",
         help="Specific cask to bump (default: all)",
     )
@@ -289,8 +236,7 @@ def main() -> int:
 
     try:
         if args.cask:
-            config = CASK_BY_NAME[args.cask]
-            bump_cask(config, args.version)
+            bump_cask(args.cask, args.version)
             success = True
         else:
             logger.info("Fetching releases from GitHub API...")

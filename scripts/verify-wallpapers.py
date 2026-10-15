@@ -59,9 +59,9 @@ def extract_pairs(cask_path: Path) -> list[tuple[str, str]]:
     return pairs
 
 
-def fetch_sha256(url: str) -> str:
+def fetch_sha256(url: str, timeout: int = 30) -> str:
     h = hashlib.sha256()
-    with urlopen(url) as response:
+    with urlopen(url, timeout=timeout) as response:
         while chunk := response.read(1 << 20):
             h.update(chunk)
     return h.hexdigest()

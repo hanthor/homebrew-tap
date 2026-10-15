@@ -1,3 +1,5 @@
+require_relative "../lib/wallpaper_casks"
+
 cask "framework-wallpapers" do
   os macos: "darwin", linux: "linux"
 
@@ -32,63 +34,21 @@ cask "framework-wallpapers" do
   end
 
   preflight_steps do
-    on_linux do
-      symlink ".", ".user-home", source_base: :home, overwrite: true
-      run "/bin/sh", args: ["-eu", "-c", <<~'SH'], chdir: "{{staged_path}}"
-        WALLPAPER_HOME=$(readlink .user-home)
-        replacement=$(printf '%s' "$WALLPAPER_HOME" | sed 's/[\\&|]/\\&/g')
-        find . -type f -name '*.xml' -exec sed -i.brew-home-backup "s|~|$replacement|g" {} +
-        find . -type f -name '*.xml.brew-home-backup' -delete
-      SH
-    end
+    on_linux { WallpaperCasks.preflight_home_substitution }
   end
 
   postflight_steps do
-    on_macos do
-      mkdir_p "Library/Desktop Pictures/Framework", base: :home
-      symlink "*", "Library/Desktop Pictures/Framework", target_base: :home, source_glob: true, overwrite: true
-    end
-    on_linux do
-      mkdir_p ".local/share/backgrounds/framework", base: :home
-      mkdir_p ".local/share/wallpapers/framework", base: :home
-      mkdir_p ".local/share/gnome-background-properties", base: :home
-      run "/bin/bash", chdir: "{{staged_path}}",
-                       env: { "WALLPAPER_HOME" => "{{staged_path}}/.user-home" },
-                       writable_paths: [".local/share/backgrounds/framework", ".local/share/wallpapers/framework",
-                                        ".local/share/gnome-background-properties"], writable_base: :home,
-                       args: ["-eu", "-c", <<~SH]
-                         shopt -s nullglob
-                         destination="$WALLPAPER_HOME/.local/share/backgrounds/framework"
-                         if [ -e /usr/bin/plasmashell ]; then
-                           destination="$WALLPAPER_HOME/.local/share/wallpapers/framework"
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         elif [ -e /usr/bin/gnome-shell ] || [ -e /usr/bin/mutter ]; then
-                           for file in "$PWD"/images/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                           for file in "$PWD"/gnome-background-properties/*; do
-                             ln -sfn "$file" "$WALLPAPER_HOME/.local/share/gnome-background-properties/$(basename "$file")"
-                           done
-                         else
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         fi
-                       SH
-    end
+    on_macos { WallpaperCasks.postflight_macos("framework") }
+    on_linux { WallpaperCasks.postflight_linux("framework") }
   end
 
   uninstall_postflight_steps do
-    on_macos do
-      remove "Library/Desktop Pictures/Framework/*", base: :home, symlink_target_contains: "/framework-wallpapers/"
-    end
-    on_linux do
-      remove [".local/share/backgrounds/framework/**/*", ".local/share/wallpapers/framework/**/*",
-              ".local/share/gnome-background-properties/*.xml"],
-             base: :home, symlink_target_contains: "/framework-wallpapers/"
-    end
+    on_macos { WallpaperCasks.uninstall_macos("framework") }
+    on_linux { WallpaperCasks.uninstall_linux("framework") }
   end
 
   zap trash: [
-    "#{Dir.home}/.local/share/backgrounds/framework",
-    "#{Dir.home}/.local/share/gnome-background-properties/framework-*.xml",
-    "#{Dir.home}/.local/share/wallpapers/framework",
-    "#{Dir.home}/Library/Desktop Pictures/Framework",
-  ]
+    WallpaperCasks.zap_paths_macos("framework"),
+    WallpaperCasks.zap_paths_linux("framework"),
+  ].flatten
 end

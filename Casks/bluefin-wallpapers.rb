@@ -1,3 +1,5 @@
+require_relative "../lib/wallpaper_casks"
+
 cask "bluefin-wallpapers" do
   os macos: "darwin", linux: "linux"
 
@@ -35,59 +37,17 @@ cask "bluefin-wallpapers" do
   end
 
   preflight_steps do
-    on_linux do
-      symlink ".", ".user-home", source_base: :home, overwrite: true
-      run "/bin/sh", args: ["-eu", "-c", <<~'SH'], chdir: "{{staged_path}}"
-        WALLPAPER_HOME=$(readlink .user-home)
-        replacement=$(printf '%s' "$WALLPAPER_HOME" | sed 's/[\\&|]/\\&/g')
-        find . -type f -name '*.xml' -exec sed -i.brew-home-backup "s|~|$replacement|g" {} +
-        find . -type f -name '*.xml.brew-home-backup' -delete
-      SH
-    end
+    on_linux { WallpaperCasks.preflight_home_substitution }
   end
 
   postflight_steps do
-    on_macos do
-      mkdir_p "Library/Desktop Pictures/Bluefin", base: :home
-      symlink "*", "Library/Desktop Pictures/Bluefin", target_base: :home, source_glob: true, overwrite: true
-    end
-    on_linux do
-      mkdir_p ".local/share/backgrounds/bluefin", base: :home
-      mkdir_p ".local/share/wallpapers/bluefin", base: :home
-      mkdir_p ".local/share/gnome-background-properties", base: :home
-      run "/bin/bash", chdir: "{{staged_path}}",
-                       env: { "WALLPAPER_HOME" => "{{staged_path}}/.user-home" },
-                       writable_paths: [".local/share/backgrounds/bluefin", ".local/share/wallpapers/bluefin",
-                                        ".local/share/gnome-background-properties"], writable_base: :home,
-                       args: ["-eu", "-c", <<~SH]
-                         shopt -s nullglob
-                         destination="$WALLPAPER_HOME/.local/share/backgrounds/bluefin"
-                         if [ -e /usr/bin/plasmashell ]; then
-                           destination="$WALLPAPER_HOME/.local/share/wallpapers/bluefin"
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         elif [ -e /usr/bin/gnome-shell ] || [ -e /usr/bin/mutter ]; then
-                           for file in "$PWD"/*; do
-                             if [ -f "$file" ]; then ln -sfn "$file" "$destination/$(basename "$file")"; fi
-                           done
-                           for file in "$PWD"/gnome-background-properties/*; do
-                             ln -sfn "$file" "$WALLPAPER_HOME/.local/share/gnome-background-properties/$(basename "$file")"
-                           done
-                         else
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         fi
-                       SH
-    end
+    on_macos { WallpaperCasks.postflight_macos("bluefin") }
+    on_linux { WallpaperCasks.postflight_linux("bluefin") }
   end
 
   uninstall_postflight_steps do
-    on_macos do
-      remove "Library/Desktop Pictures/Bluefin/*", base: :home, symlink_target_contains: "/bluefin-wallpapers/"
-    end
-    on_linux do
-      remove [".local/share/backgrounds/bluefin/**/*", ".local/share/wallpapers/bluefin/**/*",
-              ".local/share/gnome-background-properties/*.xml"],
-             base: :home, symlink_target_contains: "/bluefin-wallpapers/"
-    end
+    on_macos { WallpaperCasks.uninstall_macos("bluefin") }
+    on_linux { WallpaperCasks.uninstall_linux("bluefin") }
   end
 
   caveats <<~EOS

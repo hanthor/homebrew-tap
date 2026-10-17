@@ -1,3 +1,5 @@
+require_relative "../lib/wallpaper_casks"
+
 cask "bluefin-wallpapers-extra" do
   os macos: "darwin", linux: "linux"
 
@@ -32,72 +34,28 @@ cask "bluefin-wallpapers-extra" do
   end
 
   preflight_steps do
-    on_linux do
-      symlink ".", ".user-home", source_base: :home, overwrite: true
-      run "/bin/sh", args: ["-eu", "-c", <<~'SH'], chdir: "{{staged_path}}"
-        WALLPAPER_HOME=$(readlink .user-home)
-        replacement=$(printf '%s' "$WALLPAPER_HOME" | sed 's/[\\&|]/\\&/g')
-        find . -type f -name '*.xml' -exec sed -i.brew-home-backup "s|~|$replacement|g" {} +
-        find . -type f -name '*.xml.brew-home-backup' -delete
-      SH
-    end
+    on_linux { WallpaperCasks.preflight_home_substitution }
   end
 
   postflight_steps do
     on_macos do
-      mkdir_p "Library/Desktop Pictures/Bluefin-Extra", base: :home
-      symlink "*", "Library/Desktop Pictures/Bluefin-Extra", target_base: :home, source_glob: true, overwrite: true
+      WallpaperCasks.postflight_macos("bluefin-wallpapers-extra", display_name: "Bluefin-Extra")
     end
-    on_linux do
-      mkdir_p ".local/share/backgrounds/bluefin", base: :home
-      mkdir_p ".local/share/wallpapers/bluefin", base: :home
-      mkdir_p ".local/share/gnome-background-properties", base: :home
-      run "/bin/bash", chdir: "{{staged_path}}",
-                       env: { "WALLPAPER_HOME" => "{{staged_path}}/.user-home" },
-                       writable_paths: [".local/share/backgrounds/bluefin", ".local/share/wallpapers/bluefin",
-                                        ".local/share/gnome-background-properties"], writable_base: :home,
-                       args: ["-eu", "-c", <<~SH]
-                         shopt -s nullglob
-                         destination="$WALLPAPER_HOME/.local/share/backgrounds/bluefin"
-                         if [ -e /usr/bin/plasmashell ]; then
-                           destination="$WALLPAPER_HOME/.local/share/wallpapers/bluefin"
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         elif [ -e /usr/bin/gnome-shell ] || [ -e /usr/bin/mutter ]; then
-                           for file in "$PWD"/images/*; do
-                             filename=$(basename "$file")
-                             folder=${filename%.*}
-                             folder=${folder//-night/}
-                             folder=${folder//-day/}
-                             mkdir -p "$destination/$folder"
-                             ln -sfn "$file" "$destination/$folder/$filename"
-                           done
-                           for file in "$PWD"/gnome-background-properties/*; do
-                             ln -sfn "$file" "$WALLPAPER_HOME/.local/share/gnome-background-properties/$(basename "$file")"
-                           done
-                         else
-                           for file in "$PWD"/*; do ln -sfn "$file" "$destination/$(basename "$file")"; done
-                         fi
-                       SH
-    end
+    on_linux { WallpaperCasks.postflight_linux("bluefin", nested_images: true) }
   end
 
   uninstall_postflight_steps do
     on_macos do
-      remove "Library/Desktop Pictures/Bluefin-Extra/*", base:                    :home,
-                                                         symlink_target_contains: "/bluefin-wallpapers-extra/"
+      WallpaperCasks.uninstall_macos("bluefin", display_name: "Bluefin-Extra",
+                                              target_name: "bluefin-wallpapers-extra")
     end
     on_linux do
-      # The main and extra casks share destinations; never remove the other cask's links.
-      remove [".local/share/backgrounds/bluefin/**/*", ".local/share/wallpapers/bluefin/**/*",
-              ".local/share/gnome-background-properties/*.xml"],
-             base: :home, symlink_target_contains: "/bluefin-wallpapers-extra/"
+      WallpaperCasks.uninstall_linux("bluefin", target_name: "bluefin-wallpapers-extra")
     end
   end
 
   zap trash: [
-    "#{Dir.home}/.local/share/backgrounds/bluefin",
-    "#{Dir.home}/.local/share/gnome-background-properties/bluefin-*.xml",
-    "#{Dir.home}/.local/share/wallpapers/bluefin",
-    "#{Dir.home}/Library/Desktop Pictures/Bluefin-Extra",
-  ]
+    WallpaperCasks.zap_paths_macos("bluefin", display_name: "Bluefin-Extra"),
+    WallpaperCasks.zap_paths_linux("bluefin"),
+  ].flatten
 end

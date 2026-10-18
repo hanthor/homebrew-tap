@@ -1,29 +1,21 @@
+require_relative "../lib/asusctl_cask"
+
 cask "asusctl-linux" do
   arch arm: "arm64", intel: "amd64"
   os linux: "linux"
 
   version "6.3.8,3"
-  sha256 arm:          "66b7e0c8c358ad2281c806240a410be1c0e61c3c182b05408490f92de779bb9d",
-         intel:        "f05fbc48e5971649685d9269a4e7d6c835e3163e8946c4a3cebc49a5cc647cc5",
-         arm64_linux:  "66b7e0c8c358ad2281c806240a410be1c0e61c3c182b05408490f92de779bb9d",
-         x86_64_linux: "f05fbc48e5971649685d9269a4e7d6c835e3163e8946c4a3cebc49a5cc647cc5"
+  sha256 **AsusctlCask::CHECKSUMS
 
-  release_tag = "asusctl-#{version.csv.first}-#{version.csv.second}"
-  release_root = "asusctl-#{version.csv.first}-ubuntu-22.04-#{arch}"
-
-  url "https://github.com/daegalus/linux-app-builds/releases/download/#{release_tag}/#{release_root}.tar.gz"
+  url AsusctlCask.release_url(version.csv, arch)
   name "asusctl"
   desc "ASUS laptop control CLI and immutable-friendly system daemon payload"
   homepage "https://gitlab.com/asus-linux/asusctl"
 
   livecheck do
-    url "https://api.github.com/repos/daegalus/linux-app-builds/releases/latest"
+    url AsusctlCask::RELEASES_URL
     strategy :json do |json|
-      tag = json["tag_name"].to_s
-      match = tag.match(/^asusctl-(\d+(?:\.\d+)+)-(\d+)$/)
-      next if match.nil?
-
-      "#{match[1]},#{match[2]}"
+      AsusctlCask.version_from_release(json)
     end
   end
 

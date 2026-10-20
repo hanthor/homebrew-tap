@@ -27,10 +27,7 @@ cask "lm-studio-linux" do
            target: "#{Dir.home}/.local/share/applications/lm-studio.desktop"
 
   preflight_steps do
-    set_permissions "LM-Studio-{{version}}-x64.AppImage", "+x", recursive: false
-    run "LM-Studio-{{version}}-x64.AppImage", args: ["--appimage-extract"],
-                                           base: :staged_path, chdir: "{{staged_path}}"
-    remove "LM-Studio-{{version}}-x64.AppImage"
+    AppImageCasks.extract("LM-Studio-{{version}}-x64.AppImage")
     mkdir_p ".local/share/applications", base: :home
     mkdir_p ".local/share/icons", base: :home
     # The desktop file does not exist until the AppImage has been extracted.

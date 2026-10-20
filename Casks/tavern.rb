@@ -24,9 +24,7 @@ cask "tavern" do
              target: "#{Dir.home}/.local/share/applications/dev.hanthor.Tavern.desktop"
 
     preflight_steps do
-      set_permissions "Tavern-Linux.AppImage", "+x", recursive: false
-      run "Tavern-Linux.AppImage", args: ["--appimage-extract"], base: :staged_path, chdir: "{{staged_path}}"
-      remove "Tavern-Linux.AppImage"
+      AppImageCasks.extract("Tavern-Linux.AppImage")
       symlink ".", ".user-home", source_base: :home, overwrite: true
       mkdir_p ".local/share/applications", base: :home
       mkdir_p ".local/share/icons/hicolor/scalable/apps", base: :home

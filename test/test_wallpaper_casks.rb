@@ -9,9 +9,8 @@ class WallpaperCasksTest < Minitest::Test
     calls = @calls
 
     %i[symlink run mkdir_p remove].each do |name|
-      method_name = name
-      WallpaperCasks.define_singleton_method(method_name) do |*args, **kwargs|
-        calls << { name: method_name, args: args, kwargs: kwargs }
+      WallpaperCasks.define_singleton_method(name) do |*args, **kwargs|
+        calls << { name: __method__, args: args, kwargs: kwargs }
       end
     end
   end

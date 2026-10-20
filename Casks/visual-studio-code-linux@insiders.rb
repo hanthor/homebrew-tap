@@ -1,3 +1,5 @@
+require_relative "../lib/visual_studio_code_cask"
+
 cask "visual-studio-code-linux@insiders" do
   arch arm: "arm64", intel: "x64"
   os linux: "linux"
@@ -25,69 +27,21 @@ cask "visual-studio-code-linux@insiders" do
     end
   end
 
-  depends_on formula: "jq"
-
-  binary "vscode-insiders/bin/code-insiders"
-  binary "vscode-insiders/bin/code-tunnel-insiders"
-  bash_completion "vscode-insiders/resources/completions/bash/code-insiders"
-  zsh_completion  "vscode-insiders/resources/completions/zsh/_code-insiders"
-  artifact "vscode-insiders/code-insiders.desktop",
-           target: "#{Dir.home}/.local/share/applications/code-insiders.desktop"
-  artifact "vscode-insiders/code-insiders-url-handler.desktop",
-           target: "#{Dir.home}/.local/share/applications/code-insiders-url-handler.desktop"
-
-  preflight_steps do
-    move "VSCode-linux-*", "vscode-insiders", source_glob: true
-    run "{{HOMEBREW_PREFIX}}/bin/jq",
-        args:        ["del(.updateUrl) | .configurationDefaults[\"update.mode\"] = \"none\"",
-                      "{{staged_path}}/vscode-insiders/resources/app/product.json"],
-        stdout_path: "product.json"
-    # Keep sandbox write declarations out of the not-yet-renamed directory.
-    run "/bin/mv",
-        args: ["{{staged_path}}/product.json", "{{staged_path}}/vscode-insiders/resources/app/product.json"]
-
-    mkdir_p ".local/share/applications", base: :home
-    write_file "code-insiders.desktop", <<~EOS
-      [Desktop Entry]
-      Name=Visual Studio Code - Insiders
-      Comment=Code Editing. Redefined.
-      GenericName=Text Editor
-      Exec={{HOMEBREW_PREFIX}}/bin/code-insiders %F
-      Icon={{staged_path}}/vscode-insiders/resources/app/resources/linux/code.png
-      Type=Application
-      StartupNotify=false
-      StartupWMClass=Code - Insiders
-      Categories=TextEditor;Development;IDE;
-      MimeType=application/x-code-workspace;
-      Actions=new-empty-window;
-      Keywords=vscode;
-
-      [Desktop Action new-empty-window]
-      Name=New Empty Window
-      Exec={{HOMEBREW_PREFIX}}/bin/code-insiders --new-window %F
-      Icon={{staged_path}}/vscode-insiders/resources/app/resources/linux/code.png
-    EOS
-    write_file "code-insiders-url-handler.desktop", <<~EOS
-      [Desktop Entry]
-      Name=Visual Studio Code Insiders - URL Handler
-      Comment=Code Editing. Redefined.
-      GenericName=Text Editor
-      Exec={{HOMEBREW_PREFIX}}/bin/code-insiders --open-url %U
-      Icon={{staged_path}}/vscode-insiders/resources/app/resources/linux/code.png
-      Type=Application
-      NoDisplay=true
-      StartupNotify=true
-      Categories=Utility;TextEditor;Development;IDE;
-      MimeType=x-scheme-handler/vscode-insiders;
-      Keywords=vscode;
-    EOS
-    run "/bin/mv",
-        args: ["{{staged_path}}/code-insiders.desktop", "{{staged_path}}/code-insiders-url-handler.desktop",
-               "{{staged_path}}/vscode-insiders/"]
-  end
-
-  zap trash: [
-    "~/.config/Code - Insiders",
-    "~/.vscode-insiders",
-  ]
+  VisualStudioCodeCask.apply(
+    self,
+    root: "vscode-insiders",
+    executable: "code-insiders",
+    tunnel_executable: "code-tunnel-insiders",
+    desktop_file: "code-insiders.desktop",
+    url_handler_file: "code-insiders-url-handler.desktop",
+    desktop_name: "Visual Studio Code - Insiders",
+    url_handler_name: "Visual Studio Code Insiders - URL Handler",
+    startup_wm_class: "Code - Insiders",
+    url_scheme: "vscode-insiders",
+    keywords: "vscode",
+    zap_paths: [
+      "~/.config/Code - Insiders",
+      "~/.vscode-insiders",
+    ],
+  )
 end

@@ -497,5 +497,20 @@ class LinuxMcpServer < Formula
     assert_path_exists bin/"linux-mcp-server"
     assert_path_exists bin/"goose-mcp-setup"
     assert_equal version.to_s, shell_output("#{bin}/linux-mcp-server --version").strip
+
+    ENV["HOME"] = testpath
+    config_path = testpath/".config/goose/config.yaml"
+
+    output = shell_output("#{bin}/goose-mcp-setup")
+    assert_match "Created goose config at #{config_path}", output
+    assert_path_exists config_path
+    config = File.read(config_path)
+    assert_match "cmd: #{bin}/linux-mcp-server", config
+    assert_match "LINUX_MCP_LOG_LEVEL: INFO", config
+    assert_match "LINUX_MCP_SSH_KEY_PATH: ~/.ssh/id_ed25519", config
+
+    output = shell_output("#{bin}/goose-mcp-setup")
+    assert_match "Config already exists at #{config_path}", output
+    assert_equal config, File.read(config_path)
   end
 end

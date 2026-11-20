@@ -1,5 +1,3 @@
-require_relative "../lib/wallpaper_casks"
-
 cask "aurora-wallpapers" do
   version "2026-04-23"
   sha256 "fd029232de0bc45f327c394ecd00023fe52d30b376fe19046660c82f6f8bdcd7"
@@ -16,7 +14,13 @@ cask "aurora-wallpapers" do
   end
 
   preflight_steps do
-    WallpaperCasks.preflight_home_substitution
+    symlink ".", ".user-home", source_base: :home, overwrite: true
+    run "/bin/sh", args: ["-eu", "-c", <<~'SH'], chdir: "{{staged_path}}"
+      WALLPAPER_HOME=$(readlink .user-home)
+      replacement=$(printf '%s' "$WALLPAPER_HOME" | sed 's/[\\&|]/\\&/g')
+      find . -type f -name '*.xml' -exec sed -i.brew-home-backup "s|~|$replacement|g" {} +
+      find . -type f -name '*.xml.brew-home-backup' -delete
+    SH
   end
 
   postflight_steps do
@@ -56,7 +60,7 @@ cask "aurora-wallpapers" do
   end
 
   zap trash: [
-    "#{Dir.home}/.local/share/backgrounds/aurora",
-    "#{Dir.home}/.local/share/gnome-background-properties/aurora-*.xml",
+    "~/.local/share/backgrounds/aurora",
+    "~/.local/share/gnome-background-properties/aurora-*.xml",
   ]
 end

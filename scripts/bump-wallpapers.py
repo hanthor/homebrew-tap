@@ -131,7 +131,7 @@ def get_releases() -> list[Release]:
     if token:
         headers["Authorization"] = "Bearer " + token
     request = Request(GITHUB_API_URL, headers=headers)
-    with urlopen(request) as response:
+    with urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode())
 
 

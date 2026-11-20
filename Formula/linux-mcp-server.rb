@@ -21,8 +21,6 @@ class LinuxMcpServer < Formula
   depends_on "cmake" => :build
   depends_on "pkgconf" => :build
   depends_on "rust" => :build
-  depends_on "block-goose-cli"
-  depends_on "gemini-cli"
   depends_on "libffi"
   depends_on "libyaml"
   depends_on "openssl@3"
@@ -469,7 +467,8 @@ class LinuxMcpServer < Formula
 
   def caveats
     <<~EOS
-      To configure goose to use linux-mcp-server, run:
+      goose is not installed as a dependency. If you use it
+      (brew install block-goose-cli), configure it for linux-mcp-server with:
         goose-mcp-setup
 
       This creates ~/.config/goose/config.yaml with these defaults:

@@ -1,4 +1,4 @@
-tap "ublue-os/tap"
+tap "hanthor/tap"
 
 cask "jetbrains-toolbox-linux"
 cask "lm-studio-linux"

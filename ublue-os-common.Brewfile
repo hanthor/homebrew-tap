@@ -1,3 +1,3 @@
-tap "ublue-os/tap"
+tap "hanthor/tap"
 
 cask "1password-gui-linux"

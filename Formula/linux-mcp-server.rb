@@ -497,5 +497,26 @@ class LinuxMcpServer < Formula
     assert_path_exists bin/"linux-mcp-server"
     assert_path_exists bin/"goose-mcp-setup"
     assert_equal version.to_s, shell_output("#{bin}/linux-mcp-server --version").strip
+
+    # goose-mcp-setup, first run: creates the config under an isolated HOME.
+    home = testpath/"home"
+    config = home/".config/goose/config.yaml"
+    with_env(HOME: home.to_s) do
+      output = shell_output("#{bin}/goose-mcp-setup")
+      assert_match "Created goose config at #{config}", output
+      assert_path_exists config
+
+      contents = config.read
+      assert_match "GOOSE_PROVIDER: gemini-cli", contents
+      assert_match "cmd: #{HOMEBREW_PREFIX}/bin/linux-mcp-server", contents
+      assert_match(/^      LINUX_MCP_USER: \S+$/, contents)
+      assert_match "LINUX_MCP_SSH_KEY_PATH: ~/.ssh/id_ed25519", contents
+
+      # Second run: an existing config is reported and left untouched.
+      config.write "sentinel: true\n"
+      output = shell_output("#{bin}/goose-mcp-setup")
+      assert_match "Config already exists at #{config}", output
+      assert_equal "sentinel: true\n", config.read
+    end
   end
 end

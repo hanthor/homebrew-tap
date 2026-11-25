@@ -5,7 +5,7 @@ This page describes how package updates move through `hanthor/homebrew-tap`, whi
 ## Prerequisites and boundaries
 
 - Repository write access is required only for opening or updating a pull request. Do not push generated updates directly to `main`.
-- Wallpaper automation runs on Python 3.14 in GitHub Actions. Local wallpaper checks need Python 3 and network access to the release URLs; the scripts read `GITHUB_TOKEN` or `GH_TOKEN` when GitHub API authentication is useful.
+- Wallpaper automation runs on Python 3.15 in GitHub Actions. Local wallpaper checks need Python 3 and network access to the release URLs; the scripts read `GITHUB_TOKEN` or `GH_TOKEN` when GitHub API authentication is useful.
 - Formula and cask checks use Homebrew. Linux CI also installs `bubblewrap`; local Homebrew setup must provide equivalent sandbox support.
 - Never commit or paste `GITHUB_TOKEN`, `GH_TOKEN`, or another credential. Actions receive the short-lived workflow token through the workflow environment.
 - CI does not install every cask. The pull-request matrix runs formula checks on Ubuntu and macOS; use an affected operating system for cask-specific installation or runtime checks.
